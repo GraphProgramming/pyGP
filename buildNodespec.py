@@ -48,7 +48,7 @@ def try_load(name, verbose, i, total):
 
 if __name__ == "__main__":
     verbose = False
-    filename = "../grapheditor/data/Python.nodes.json"
+    filename = "../GPWebUI/data/Python.nodes.json"
     for arg in sys.argv:
         if arg == "-v" or arg == "--verbose":
             verbose = True
