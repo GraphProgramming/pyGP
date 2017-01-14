@@ -48,7 +48,7 @@ def try_load(name, verbose, i, total):
 
 if __name__ == "__main__":
     verbose = False
-    filename = "../GPWebUI/data/Python.nodes.json"
+    filename = "../GPWebUI/data/pyGP.nodes.json"
     for arg in sys.argv:
         if arg == "-v" or arg == "--verbose":
             verbose = True
@@ -59,7 +59,7 @@ if __name__ == "__main__":
             print("-h   --help      shows this help")
 
     if len(sys.argv) > 1 and not sys.argv[-1] == "-v" and not sys.argv[-1] == "--verbose" and not sys.argv[
-        -1] == "-h" and not sys.argv[-1] == "--help" and not sys.argv[-1] == "Python":
+        -1] == "-h" and not sys.argv[-1] == "--help" and not sys.argv[-1] == "pyGP":
         filename = sys.argv[-1]
 
     files = [f for f in files_by_pattern('.', lambda fn: fn.endswith('.py'))]
