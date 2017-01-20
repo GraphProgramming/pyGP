@@ -25,6 +25,7 @@ class GraphExState(object):
         self.restricted_mode = False
         self.graph = None
         self.publish = None
+        self.shedule = None
         self.output = None
         self.shutdown_hooks = []
         self.shutdown_blockers = 0
@@ -110,8 +111,14 @@ class GraphEx(object):
         queue.put(node)
         self.lock.release()
 
+    def shedule_automatic(self, node):
+        queue = self.queue_parallel
+        if node["main_thread"] or self.serial_mode:
+            queue = self.queue_serial
+        self.shedule(node, queue)
+
     def publish(self, node, topic, msg):
-        if topic in node["outs"]:
+        if topic in node["outputs"]:
             for next_node in node["nextNodes"]:
                 for conn in node["outs"][topic]:
                     if next_node["name"] == conn["node"]["name"]:
@@ -126,7 +133,7 @@ class GraphEx(object):
                             queue = self.queue_serial
                         self.shedule(next_node, queue)
         else:
-            print("ERROR: Topic '" + str(topic) + "' is not an output of the node.")
+            print("ERROR: Topic '" + str(topic) + "' is not an output of the node '" + str(node["name"]) + "' (" + str(node["code"]) + ").")
 
     def tryGetFromQueue(self, queue):
         elem = None
@@ -151,6 +158,7 @@ class GraphEx(object):
         # Initialisation
         if initialization_required:
             self.state.publish = self.publish
+            self.state.shedule = self.shedule_automatic
             n = multiprocessing.cpu_count()
             self.thread_pool = ThreadPoolExecutor(n * 16)
             for x in self.input_nodes:
@@ -170,6 +178,7 @@ class GraphEx(object):
         if initialization_required:
             self.serial_mode = True
             self.state.publish = self.publish
+            self.state.shedule = self.shedule_automatic
             for x in self.input_nodes:
                 self.shedule(self.input_nodes[x], self.queue_serial)
 
@@ -177,7 +186,7 @@ class GraphEx(object):
         self.dispatchLoop(self.queue_serial, False)
 
     def dispatchLoop(self, queue, start_threaded):
-        while self.running and ((not queue.empty()) or self.state.shutdown_blockers > 2):
+        while self.running and ((not self.queue_serial.empty()) or (not self.queue_parallel.empty()) or self.state.shutdown_blockers > 2 or len(self.in_execution) > 0):
             elem = self.tryGetFromQueue(queue)
             if elem is None:
                 time.sleep(0.01)
@@ -193,13 +202,18 @@ class GraphEx(object):
                 self.tickNode(elem, inputs)
 
     def tickNode(self, node, inputs):
-        result = node["tick"](inputs)
-        if result is not None:
-            for x in result:
-                self.publish(node, x, result[x])
-        self.lock.acquire()
-        del self.in_execution[node["name"]]
-        self.lock.release()
+        try:
+            result = node["tick"](inputs)
+            if result is not None:
+                for x in result:
+                    self.publish(node, x, result[x])
+            self.lock.acquire()
+            del self.in_execution[node["name"]]
+            self.lock.release()
+        except:
+            print("ERROR: " + str(sys.exc_info()[0]))
+            print(traceback.format_exc())
+            sys.stdout.flush()
 
 if __name__ == "__main__":
     # Execute all graph paths passed as parameters.
@@ -209,7 +223,8 @@ if __name__ == "__main__":
         state = GraphExState()
         offset = 2
         if len(sys.argv) > offset and sys.argv[offset] == "debug":
-            state.shared_dict["debugger"] = debugger.Debugger()
+            dbg = debugger.Debugger()
+            state.shared_dict["debugger"] = dbg
             offset += 1
         if len(sys.argv) > offset and sys.argv[offset] == "cluster":
             state.restricted_mode = True

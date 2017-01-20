@@ -17,7 +17,6 @@ class Debugger(object):
         t = Thread(target=self.server_thread)
         t.setDaemon(True)
         t.start()
-        pass
 
     def send(self, msg):
         while len(self.sockets) < 1 or self.sockets[0] == self.server:
