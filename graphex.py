@@ -77,7 +77,8 @@ class GraphEx(object):
             module.init(node, state)
             node["node_uid"] = node["name"]
             node["heat"] = 0
-            node["main_thread"] = False
+            if not ("main_thread" in node):
+                node["main_thread"] = False
             node["nextNodes"] = []
             node["prevNodes"] = []
             node["ins"] = {}
@@ -186,7 +187,7 @@ class GraphEx(object):
         self.dispatchLoop(self.queue_serial, False)
 
     def dispatchLoop(self, queue, start_threaded):
-        while self.running and ((not self.queue_serial.empty()) or (not self.queue_parallel.empty()) or self.state.shutdown_blockers > 2 or len(self.in_execution) > 0):
+        while self.is_running() and ((not self.queue_serial.empty()) or (not self.queue_parallel.empty()) or self.state.shutdown_blockers > 0 or len(self.in_execution) > 0):
             elem = self.tryGetFromQueue(queue)
             if elem is None:
                 time.sleep(0.01)
@@ -201,19 +202,30 @@ class GraphEx(object):
             else:
                 self.tickNode(elem, inputs)
 
+    def is_running(self):
+        running = self.running
+        try:
+            running = running and not rospy.is_shutdown()
+        except:
+            pass
+        return running
+
+    def kill(self):
+        self.running = False
+
     def tickNode(self, node, inputs):
         try:
             result = node["tick"](inputs)
             if result is not None:
                 for x in result:
                     self.publish(node, x, result[x])
-            self.lock.acquire()
-            del self.in_execution[node["name"]]
-            self.lock.release()
         except:
             print("ERROR: " + str(sys.exc_info()[0]))
             print(traceback.format_exc())
             sys.stdout.flush()
+        self.lock.acquire()
+        del self.in_execution[node["name"]]
+        self.lock.release()
 
 if __name__ == "__main__":
     # Execute all graph paths passed as parameters.
@@ -239,6 +251,7 @@ if __name__ == "__main__":
         state.shared_dict["kill"] = False
         gex = GraphEx(sys.argv[1], state)
         gex.executeThreaded()
+        gex.kill()
         for hook in state.shutdown_hooks:
             hook()
         print(json.dumps(state.output_dict))
