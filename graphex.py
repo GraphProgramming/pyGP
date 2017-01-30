@@ -215,7 +215,16 @@ class GraphEx(object):
 
     def tickNode(self, node, inputs):
         try:
+            if "debugger" in self.state.shared_dict:
+                node["heat"] += 1
+                dat = {"state": True, "heat": node["heat"]}
+                data_str = "running:" + json.dumps(dat)
+                self.state.shared_dict["debugger"].send("data_" + node["node_uid"] + ":" + data_str)
             result = node["tick"](inputs)
+            if "debugger" in self.state.shared_dict:
+                dat = {"state": False, "heat": node["heat"]}
+                data_str = "running:" + json.dumps(dat)
+                self.state.shared_dict["debugger"].send("data_" + node["node_uid"] + ":" + data_str)
             if result is not None:
                 for x in result:
                     self.publish(node, x, result[x])
