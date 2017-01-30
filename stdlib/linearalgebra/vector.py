@@ -1,6 +1,8 @@
+import numpy as np
+
 def init(node, global_state):
     def tick(value):
-        return {"result": node["args"]["value"]}
+        return {"result": np.array(node["args"]["value"])}
 
     node["tick"] = tick
 
