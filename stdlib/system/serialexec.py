@@ -8,7 +8,7 @@ def init(node, global_state):
     node["tick"] = tick
 
 def spec(node):
-    node["name"] = "(Stream) Exec"
+    node["name"] = "(Serial) Exec"
     node["inputs"]["cmd"] = "String"
     node["inputs"]["trigger"] = "Object"
     node["outputs"]["trigger"] = "Object"
