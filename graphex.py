@@ -130,7 +130,7 @@ class GraphEx(object):
                         next_node["input_buffer"][conn["var"]].put(msg)
                         self.lock.release()
                         queue = self.queue_parallel
-                        if node["main_thread"] or self.serial_mode:
+                        if next_node["main_thread"] or self.serial_mode:
                             queue = self.queue_serial
                         self.shedule(next_node, queue)
         else:
@@ -221,6 +221,7 @@ class GraphEx(object):
                 data_str = "running:" + json.dumps(dat)
                 self.state.shared_dict["debugger"].send("data_" + node["node_uid"] + ":" + data_str)
             result = node["tick"](inputs)
+            sys.stdout.flush()
             if "debugger" in self.state.shared_dict:
                 dat = {"state": False, "heat": node["heat"]}
                 data_str = "running:" + json.dumps(dat)
