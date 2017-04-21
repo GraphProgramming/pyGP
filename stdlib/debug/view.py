@@ -22,7 +22,7 @@ def init(node, global_state):
         data_str = ""
         if type(value["val"]) is list or type(value["val"]) is dict or type(value["val"]) is str or type(value["val"]) is unicode or type(value["val"]) is int:
             data_str = "json:" + json.dumps(value["val"])
-        elif type(value["val"]) == np.ndarray and (len(value["val"].shape) != 2 or len(value["val"][1]) != 3):
+        elif type(value["val"]) == np.ndarray and (len(value["val"].shape) != 2 or len(value["val"][1]) != 3) and not (len(value["val"].shape) == 3 and value["val"].shape[2] == 3):
             data_str = "json:" + json.dumps(value["val"].tolist())
         elif type(value["val"]) == np.ndarray:
             width = node["args"]["width"]
