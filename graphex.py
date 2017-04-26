@@ -79,6 +79,10 @@ class GraphEx(object):
             node["heat"] = 0
             if not ("main_thread" in node):
                 node["main_thread"] = False
+            if not ("buffer_policy" in node):
+                node["buffer_policy"] = "undefined"
+            if not ("buffer_size" in node):
+                node["buffer_size"] = -1
             node["nextNodes"] = []
             node["prevNodes"] = []
             node["ins"] = {}
@@ -196,7 +200,11 @@ class GraphEx(object):
             inputs = {}
             for x in elem["input_buffer"]:
                 # TODO correctly manage input buffer! (buffer policy implementation)
+                while 0 < elem["buffer_size"] and elem["input_buffer"][x].qsize() > elem["buffer_size"]:
+                    elem["input_buffer"][x].get()
                 inputs[x] = elem["input_buffer"][x].get()
+                if elem["buffer_policy"] == "keep":
+                    elem["input_buffer"][x].put(inputs[x])
             if start_threaded:
                 self.thread_pool.submit(self.tickNode, elem, inputs)
             else:
