@@ -7,7 +7,7 @@ from threading import Event
 import debugger
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
-from Queue import Queue
+from queue import Queue
 import traceback
 try:
     import rospy

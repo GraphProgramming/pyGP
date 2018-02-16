@@ -10,7 +10,7 @@ def files_by_pattern(directory, matchFunc):
 
 
 def try_load(name, verbose, i, total):
-    name = name.replace("/", ".")[2:-3]
+    name = name.replace("/", ".").replace("\\", ".")[2:-3]
     if verbose:
         print("[" + str(i) + "/" + str(total) + "] Parsing: " + name)
     if name == "graphex" or name == "buildNodespec" or name == "debugger" or name.endswith(
