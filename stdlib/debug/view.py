@@ -20,7 +20,7 @@ def init(node, global_state):
             return result
         
         data_str = ""
-        if type(value["val"]) is list or type(value["val"]) is dict or type(value["val"]) is str or type(value["val"]) is unicode or type(value["val"]) is int:
+        if type(value["val"]) is list or type(value["val"]) is dict or type(value["val"]) is str or type(value["val"]) is byte or type(value["val"]) is int:
             data_str = "json:" + json.dumps(value["val"])
         elif type(value["val"]) == np.ndarray and (len(value["val"].shape) != 2 or len(value["val"][1]) != 3) and not (len(value["val"].shape) == 3 and value["val"].shape[2] == 3):
             data_str = "json:" + json.dumps(value["val"].tolist())
@@ -39,7 +39,6 @@ def init(node, global_state):
         else:
             data_str = "type:" + str(type(value["val"]))
         global_state.shared_dict["debugger"].send("data_" + node["node_uid"] + ":" + data_str)
-            
         
         return result
 

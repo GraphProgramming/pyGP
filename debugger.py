@@ -21,7 +21,7 @@ class Debugger(object):
     def send(self, msg):
         while len(self.sockets) < 1 or self.sockets[0] == self.server:
             time.sleep(0.1)
-        self.sockets[0].send(msg + "\n")
+        self.sockets[0].send((msg + "\n").encode('utf-8'))
 
     def wait_for(self, msg):
         line = ""

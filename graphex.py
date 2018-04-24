@@ -3,10 +3,11 @@ import sys
 import time
 from threading import Thread
 from threading import Lock
+from threading import Event
 import debugger
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
-from Queue import Queue
+from queue import Queue
 import traceback
 try:
     import rospy
@@ -42,6 +43,8 @@ class GraphExState(object):
 
 class GraphEx(object):
     def __init__(self, graph_path, state, verbose = False):
+        self.eventSerial = Event()
+        self.eventThreaded = Event()
         self.running = True
         self.state = state
         self.serial_mode = False
@@ -89,6 +92,10 @@ class GraphEx(object):
             node["heat"] = 0
             if not ("main_thread" in node):
                 node["main_thread"] = False
+            if not ("buffer_policy" in node):
+                node["buffer_policy"] = "undefined"
+            if not ("buffer_size" in node):
+                node["buffer_size"] = -1
             node["nextNodes"] = []
             node["prevNodes"] = []
             node["ins"] = {}
@@ -120,6 +127,8 @@ class GraphEx(object):
     def shedule(self, node, queue):
         self.lock.acquire()
         queue.put(node)
+        self.eventSerial.set()
+        self.eventThreaded.set()
         self.lock.release()
 
     def shedule_automatic(self, node):
@@ -200,13 +209,21 @@ class GraphEx(object):
         while self.is_running() and ((not self.queue_serial.empty()) or (not self.queue_parallel.empty()) or self.state.shutdown_blockers > 0 or len(self.in_execution) > 0):
             elem = self.tryGetFromQueue(queue)
             if elem is None:
-                time.sleep(0.01)
+                if start_threaded:
+                    self.eventThreaded.wait()
+                    self.eventThreaded.clear()
+                else:
+                    self.eventSerial.wait()
+                    self.eventSerial.clear()
                 continue
 
             inputs = {}
             for x in elem["input_buffer"]:
-                # TODO correctly manage input buffer! (buffer policy implementation)
+                while 0 < elem["buffer_size"] and elem["input_buffer"][x].qsize() > elem["buffer_size"]:
+                    elem["input_buffer"][x].get()
                 inputs[x] = elem["input_buffer"][x].get()
+                if elem["buffer_policy"] == "keep":
+                    elem["input_buffer"][x].put(inputs[x])
             if start_threaded:
                 self.thread_pool.submit(self.tickNode, elem, inputs)
             else:
@@ -245,6 +262,8 @@ class GraphEx(object):
             sys.stdout.flush()
         self.lock.acquire()
         del self.in_execution[node["name"]]
+        self.eventThreaded.set()
+        self.eventSerial.set()
         self.lock.release()
 
     def run(self, args=None):
