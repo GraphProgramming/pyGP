@@ -20,6 +20,7 @@ except ImportError:
 
 class GraphExState(object):
     def __init__(self):
+        self.arguments = {}
         self.shared_dict = {}
         self.output_dict = {}
         self.restricted_mode = False
@@ -27,8 +28,17 @@ class GraphExState(object):
         self.publish = None
         self.shedule = None
         self.output = None
+        self.parent = None
         self.shutdown_hooks = []
         self.shutdown_blockers = 0
+
+    def create_child_state(self):
+        state = GraphExState()
+        if "debugger" in self.shared_dict:
+            state.shared_dict["debugger"] = self.shared_dict["debugger"]
+        state.restricted_mode = self.restricted_mode
+        state.parent = self
+        return state
 
 class GraphEx(object):
     def __init__(self, graph_path, state, verbose = False):
@@ -74,7 +84,7 @@ class GraphEx(object):
                 raise ImportError("Cannot find implementation for node: " + node["code"])
 
             # Create node and add lists for connecting them.
-            module.init(node, state)
+            module.init(node, self.state)
             node["node_uid"] = node["name"]
             node["heat"] = 0
             if not ("main_thread" in node):
@@ -237,6 +247,17 @@ class GraphEx(object):
         del self.in_execution[node["name"]]
         self.lock.release()
 
+    def run(self, args=None):
+        self.state.shared_dict["kill"] = False
+        if args is not None:
+            self.state.arguments = args
+        self.executeThreaded()
+        self.kill()
+        for hook in self.state.shutdown_hooks:
+            hook()
+        return self.state.output_dict
+
+
 if __name__ == "__main__":
     # Execute all graph paths passed as parameters.
     if len(sys.argv) < 2:
@@ -245,23 +266,14 @@ if __name__ == "__main__":
         state = GraphExState()
         offset = 2
         if len(sys.argv) > offset and sys.argv[offset] == "debug":
-            dbg = debugger.Debugger()
-            state.shared_dict["debugger"] = dbg
+            state.shared_dict["debugger"] = debugger.Debugger()
             offset += 1
         if len(sys.argv) > offset and sys.argv[offset] == "cluster":
             state.restricted_mode = True
             offset += 1
+        args = None
         if len(sys.argv) > offset:
-            dbg = None
-            if "debugger" in state.shared_dict:
-                dbg = state.shared_dict["debugger"]
-            state.shared_dict = json.loads(" ".join(sys.argv[offset:]))
-            if dbg is not None:
-                state.shared_dict["debugger"] = dbg
-        state.shared_dict["kill"] = False
+            args = json.loads(" ".join(sys.argv[offset:]))
         gex = GraphEx(sys.argv[1], state)
-        gex.executeThreaded()
-        gex.kill()
-        for hook in state.shutdown_hooks:
-            hook()
-        print(json.dumps(state.output_dict))
+        result = gex.run(args)
+        print(json.dumps(result))
