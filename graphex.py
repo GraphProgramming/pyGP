@@ -7,7 +7,11 @@ from threading import Event
 import debugger
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
-from queue import Queue
+try:
+    from queue import Queue
+except:
+    from Queue import Queue
+
 import traceback
 try:
     import rospy
