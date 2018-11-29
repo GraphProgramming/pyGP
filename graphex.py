@@ -124,7 +124,7 @@ class GraphEx(object):
             inputNode["nextNodes"].append(outputNode)
             if outputQualifier not in inputNode["outs"]:
                 inputNode["outs"][outputQualifier] = []
-            inputNode["outs"][outputQualifier].append({"node":outputNode,"var":inputQualifier});
+            inputNode["outs"][outputQualifier].append({"node":outputNode,"var":inputQualifier})
             outputNode["prevNodes"].append(inputNode)
             outputNode["ins"][inputQualifier] = {"var":outputQualifier}
 
