@@ -4,7 +4,7 @@ import time
 from threading import Thread
 from threading import Lock
 from threading import Event
-import debugger
+import gpm.pyGP.debugger
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
 try:
@@ -88,7 +88,16 @@ class GraphEx(object):
                 module = __import__("%s" % codeName, fromlist=["init"])
             except ImportError:
                 module = None
-                raise ImportError("Cannot find implementation for node: " + node["code"])
+            if module is None:
+                # Try to import the code required for a node.
+                try:
+                    codeName = "gpm.pyGP." + node["code"]
+                    if self.verbose:
+                        print("Importing %s" % codeName)
+                    module = __import__("%s" % codeName, fromlist=["init"])
+                except ImportError:
+                    module = None
+                    raise ImportError("Cannot find implementation for node: " + node["code"])
 
             # Create node and add lists for connecting them.
             module.init(node, self.state)

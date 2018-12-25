@@ -3,6 +3,9 @@ import sys
 import json
 
 
+from gpm.__main__ import GPM_HOME
+
+
 def files_by_pattern(directory, matchFunc):
     for path, dirs, files in os.walk(directory, followlinks=True):
         for f in filter(matchFunc, files):
@@ -10,11 +13,10 @@ def files_by_pattern(directory, matchFunc):
 
 
 def try_load(name, verbose, i, total):
-    name = name.replace("/", ".").replace("\\", ".")[2:-3]
+    name = name.replace("/", ".").replace("\\", ".")[0:-3]
     if verbose:
         print("[" + str(i) + "/" + str(total) + "] Parsing: " + name)
-    if name == "graphex" or name == "buildNodespec" or name == "debugger" or name.endswith(
-            "__init__") or name.endswith("_Lib"):
+    if name.endswith("__init__") or name.endswith("__main__") or name.endswith("buildNodespec") or name.endswith("debugger") or name.endswith("_Lib"):
         return False, None
     try:
         print(name)
@@ -32,7 +34,7 @@ def try_load(name, verbose, i, total):
     try:
         node = {}
         node["name"] = "Specify a node name (name)"
-        node["code"] = name
+        node["code"] = name.replace("gpm.pyGP.", "")
         node["inputs"] = {}
         node["outputs"] = {}
         node["args"] = {}
@@ -48,7 +50,7 @@ def try_load(name, verbose, i, total):
 
 if __name__ == "__main__":
     verbose = False
-    filename = "../GPWebUI/data/pyGP.nodes.json"
+    filename = "pyGP.nodes.json"
     for arg in sys.argv:
         if arg == "-v" or arg == "--verbose":
             verbose = True
@@ -63,6 +65,7 @@ if __name__ == "__main__":
         filename = sys.argv[-1]
 
     files = [f for f in files_by_pattern('.', lambda fn: fn.endswith('.py'))]
+    files += [f.replace(GPM_HOME, "gpm") for f in files_by_pattern(GPM_HOME + "/pyGP", lambda fn: fn.endswith('.py'))]
     txt = "["
     total = len(files)
     i = 1
