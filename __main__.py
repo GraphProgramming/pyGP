@@ -4,7 +4,6 @@ import time
 from threading import Thread
 from threading import Lock
 from threading import Event
-import gpm.pyGP.debugger
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
 try:
@@ -22,6 +21,9 @@ try:
     import builtins
 except ImportError:
     import __builtin__ as builtins
+
+import gpm.pyGP.debugger as debugger
+
 
 class GraphExState(object):
     def __init__(self):
