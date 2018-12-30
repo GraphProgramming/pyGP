@@ -64,7 +64,7 @@ if __name__ == "__main__":
         -1] == "-h" and not sys.argv[-1] == "--help" and not sys.argv[-1] == "pyGP":
         filename = sys.argv[-1]
 
-    files = [f for f in files_by_pattern('.', lambda fn: fn.endswith('.py'))]
+    files = [f.replace('./', '').replace('.\\', '') for f in files_by_pattern('.', lambda fn: fn.endswith('.py'))]
     files += [f.replace(GPM_HOME, "gpm") for f in files_by_pattern(GPM_HOME + "/pyGP", lambda fn: fn.endswith('.py'))]
     txt = "["
     total = len(files)
