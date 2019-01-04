@@ -1,4 +1,4 @@
-from graphex import GraphExState, GraphEx
+from gpm.pyGP.__main__ import GraphExState, GraphEx
 
 def init(node, global_state):
     def tick(value):
