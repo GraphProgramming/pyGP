@@ -1,3 +1,4 @@
+import argparse
 import json
 import sys
 import time
@@ -26,11 +27,11 @@ import gpm.pyGP.debugger as debugger
 
 
 class GraphExState(object):
-    def __init__(self):
+    def __init__(self, restricted_mode=False):
         self.arguments = {}
         self.shared_dict = {}
         self.output_dict = {}
-        self.restricted_mode = False
+        self.restricted_mode = restricted_mode
         self.graph = None
         self.publish = None
         self.shedule = None
@@ -83,26 +84,26 @@ class GraphEx(object):
                 raise Exception("Invalid Graph: Duplicate node name. All node names must be unique!")
 
             # Try to import the code required for a node.
+            codeName, nodeName = node["code"].split(":")
             try:
-                codeName = node["code"]
                 if self.verbose:
                     print("Importing %s" % codeName)
-                module = __import__("%s" % codeName, fromlist=["init"])
+                module = __import__("%s" % codeName, fromlist=["NODES"])
             except ImportError:
                 module = None
             if module is None:
                 # Try to import the code required for a node.
                 try:
-                    codeName = "gpm.pyGP." + node["code"]
+                    codeName = "gpm.pyGP." + codeName
                     if self.verbose:
                         print("Importing %s" % codeName)
-                    module = __import__("%s" % codeName, fromlist=["init"])
+                    module = __import__("%s" % codeName, fromlist=["NODES"])
                 except ImportError:
                     module = None
                     raise ImportError("Cannot find implementation for node: " + node["code"])
 
             # Create node and add lists for connecting them.
-            module.init(node, self.state)
+            node["tick"] = module.NODES[nodeName]["code"](self.state, **node["args"])
             node["node_uid"] = node["name"]
             node["heat"] = 0
             if not ("main_thread" in node):
@@ -262,7 +263,7 @@ class GraphEx(object):
                 dat = {"state": True, "heat": node["heat"]}
                 data_str = "running:" + json.dumps(dat)
                 self.state.shared_dict["debugger"].send("data_" + node["node_uid"] + ":" + data_str)
-            result = node["tick"](inputs)
+            result = node["tick"](**inputs)
             sys.stdout.flush()
             if "debugger" in self.state.shared_dict:
                 dat = {"state": False, "heat": node["heat"]}
@@ -291,23 +292,27 @@ class GraphEx(object):
             hook()
         return self.state.output_dict
 
+def main(argv):
+    parser = argparse.ArgumentParser(description='Graph Programming Manager')
+    parser.add_argument("--debug", required=False, action="store_true", help="Debug mode.")
+    parser.add_argument("--restricted", required=False, action="store_true", help="If running in restricted mode.")
+    parser.add_argument("file", type=str, help="Run an extension")
+    args, other_args = parser.parse_known_args(argv)
+
+    state = GraphExState(restricted_mode=args.restricted)
+    if args.debug:
+        state.shared_dict["debugger"] = debugger.Debugger()
+    gex = GraphEx(args.file, state)
+    try:
+        run_args = json.loads(" ".join(other_args))
+    except:
+        run_args = {}
+    if args.debug:
+        while not state.shared_dict["debugger"].has_clients():
+            time.sleep(0.2)
+    result = gex.run(run_args)
+    print(json.dumps(result))
+
 
 if __name__ == "__main__":
-    # Execute all graph paths passed as parameters.
-    if len(sys.argv) < 2:
-        print("Usage: python graphex.py <file.graph.json> [debug] [cluster] [args]")
-    else:
-        state = GraphExState()
-        offset = 2
-        if len(sys.argv) > offset and sys.argv[offset] == "debug":
-            state.shared_dict["debugger"] = debugger.Debugger()
-            offset += 1
-        if len(sys.argv) > offset and sys.argv[offset] == "cluster":
-            state.restricted_mode = True
-            offset += 1
-        args = None
-        if len(sys.argv) > offset:
-            args = json.loads(" ".join(sys.argv[offset:]))
-        gex = GraphEx(sys.argv[1], state)
-        result = gex.run(args)
-        print(json.dumps(result))
+    main(sys.argv[1:])

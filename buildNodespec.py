@@ -20,7 +20,7 @@ def try_load(name, verbose, i, total):
         return False, None
     try:
         print(name)
-        module = __import__(name, fromlist=["spec"])
+        module = __import__(name, fromlist=["NODES"])
     except (ImportError, SyntaxError) as e:
         if verbose:
             print("Syntax or import error at: " + name)
@@ -32,15 +32,12 @@ def try_load(name, verbose, i, total):
         print(e)
         return False, (name, e)
     try:
-        node = {}
-        node["name"] = "Specify a node name (name)"
-        node["code"] = name.replace("gpm.pyGP.", "")
-        node["inputs"] = {}
-        node["outputs"] = {}
-        node["args"] = {}
-        node["desc"] = "Specify a node description (desc)"
-        module.spec(node)
-        return True, json.dumps(node, sort_keys=True, indent=4)
+        out = []
+        for node in module.NODES.values():
+            code = name.replace("gpm.pyGP.", "")
+            node['code'] = f"{code}:{node['name']}"
+            out.append(node)
+        return True, out
     except (AttributeError, TypeError) as e:
         if verbose:
             print("Failed parsing " + name + "!")
@@ -66,17 +63,17 @@ if __name__ == "__main__":
 
     files = [f.replace('./', '').replace('.\\', '') for f in files_by_pattern('.', lambda fn: fn.endswith('.py'))]
     files += [f.replace(GPM_HOME, "gpm") for f in files_by_pattern(GPM_HOME + "/pyGP", lambda fn: fn.endswith('.py'))]
-    txt = "["
+    out_spec = []
     total = len(files)
     i = 1
     errs = []
     for file in files:
-        success, node = try_load(file, verbose, i, total)
+        success, nodes = try_load(file, verbose, i, total)
         i += 1
         if success:
-            txt += node + ",\n"
-        elif node is not None:
-            errs.append(node)
+            out_spec.extend(nodes)
+        elif nodes is not None:
+            errs.append(nodes)
 
     if verbose:
         print("")
@@ -88,12 +85,8 @@ if __name__ == "__main__":
         print(ex)
         print("")
 
-    if txt.endswith(",\n"):
-        txt = txt[:-2]
-    txt += "]\n"
-
-    file = open(filename, 'w')
-    file.write(txt)
+    with open(filename, 'w') as f:
+        f.write(json.dumps(out_spec, sort_keys=True, indent=4))
     if len(errs) > 0:
         print(str(len(errs)) + " errors occured.")
     else:

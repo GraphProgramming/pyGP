@@ -1,13 +1,17 @@
 import sys
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        print(value["val"])
+@register(NODES,
+    name="Print",
+    inputs=dict(val="Object"),
+    outputs=dict())
+def init(global_state, value: str = "Hello World!") -> Callable:
+    """
+    Print on the screen.
+    """
+    def tick(val):
+        print(val)
         sys.stdout.flush()
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Print"
-    node["inputs"]["val"] = "Object"
-    node["desc"] = "Print on the screen."
+    return tick

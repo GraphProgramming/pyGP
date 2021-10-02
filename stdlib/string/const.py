@@ -1,11 +1,15 @@
-def init(node, global_state):
-    def tick(value):
-        return {"result": node["args"]["value"]}
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "String Const"
-    node["outputs"]["result"] = "String"
-    node["args"]["value"] = "Hello World!"
-    node["desc"] = "Returns the arg on the output."
+@register(NODES,
+    name="String Const",
+    inputs=dict(),
+    outputs=dict(result="Boolean"))
+def init(global_state, value: str = "Hello World!") -> Callable:
+    """
+    Return a const string.
+    """
+    def tick():
+        return {"result": value}
+    return tick

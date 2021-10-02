@@ -18,6 +18,9 @@ class Debugger(object):
         t.setDaemon(True)
         t.start()
 
+    def has_clients(self):
+        return len(self.sockets) > 0
+
     def send(self, msg):
         while len(self.sockets) < 1 or self.sockets[0] == self.server:
             time.sleep(0.1)
