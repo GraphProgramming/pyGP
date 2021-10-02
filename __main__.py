@@ -103,7 +103,10 @@ class GraphEx(object):
                     raise ImportError("Cannot find implementation for node: " + node["code"])
 
             # Create node and add lists for connecting them.
-            node["tick"] = module.NODES[nodeName]["code"](self.state, **node["args"])
+            try:
+                node["tick"] = module.NODES[nodeName]["code"](node, self.state, **node["args"])
+            except Exception as e:
+                raise RuntimeError(node["code"]) from e
             node["node_uid"] = node["name"]
             node["heat"] = 0
             if not ("main_thread" in node):

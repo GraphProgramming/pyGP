@@ -1,15 +1,17 @@
 import os
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        os.system(value["cmd"])
-        return {"trigger": value["trigger"]}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "(Serial) Exec"
-    node["inputs"]["cmd"] = "String"
-    node["inputs"]["trigger"] = "Object"
-    node["outputs"]["trigger"] = "Object"
-    node["desc"] = "Execute a system command."
+@register(NODES,
+    name="(Serial) Execute",
+    inputs=dict(cmd="String", trigger="Object"),
+    outputs=dict(trigger="Object"))
+def init(node, global_state) -> Callable:
+    """
+    Execute a system command.
+    """
+    def tick(cmd, trigger):
+        os.system(cmd)
+        return {"trigger": trigger}
+    return tick

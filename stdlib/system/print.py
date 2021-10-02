@@ -7,7 +7,7 @@ NODES = {}
     name="Print",
     inputs=dict(val="Object"),
     outputs=dict())
-def init(global_state, value: str = "Hello World!") -> Callable:
+def init(node, global_state, value: str = "Hello World!") -> Callable:
     """
     Print on the screen.
     """

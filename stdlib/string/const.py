@@ -6,7 +6,7 @@ NODES = {}
     name="String Const",
     inputs=dict(),
     outputs=dict(result="Boolean"))
-def init(global_state, value: str = "Hello World!") -> Callable:
+def init(node, global_state, value: str = "Hello World!") -> Callable:
     """
     Return a const string.
     """

@@ -1,15 +1,18 @@
 import time
 
-def init(node, global_state):
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
+
+@register(NODES,
+    name="Delay",
+    inputs=dict(val="Object"),
+    outputs=dict(result="Object"))
+def init(node, global_state, delay: float = 0.2) -> Callable:
+    """
+    Delay the execution.
+    """
     def tick(value):
-        time.sleep(node["args"]["delay"])
+        time.sleep(delay)
         return {"delayed": value["val"]}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Delay"
-    node["inputs"]["val"] = "Object"
-    node["outputs"]["delayed"] = "Object"
-    node["args"]["delay"] = 0.2
-    node["desc"] = "Delay the execution."
+    return tick

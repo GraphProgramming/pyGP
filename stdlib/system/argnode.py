@@ -1,16 +1,18 @@
-def init(node, global_state):
-    def tick(value):
-        argname = node["args"]["argname"]
-        ret = node["args"]["default"]
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
+
+@register(NODES,
+    name="ArgNode",
+    inputs=dict(),
+    outputs=dict(value="Object"))
+def init(node, global_state, argname: str = "verbose", default = True) -> Callable:
+    """
+    Arguments that are passed to the graph via call.
+    """
+    def tick():
+        ret = default
         if argname in global_state.arguments:
             ret = global_state.arguments[argname]
         return {"value": ret}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "ArgNode"
-    node["outputs"]["value"] = "Object"
-    node["args"]["argname"] = "verbose"
-    node["args"]["default"] = True
-    node["desc"] = "Arguments that are passed to the graph via call."
+    return tick

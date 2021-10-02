@@ -1,16 +1,19 @@
-def init(node, global_state):
-    def tick(value):
-        if value["condition"]:
-            return {"true": value["val"]}
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
+
+@register(NODES,
+    name="If",
+    inputs=dict(condition="Boolean", val="Object"),
+    outputs=dict(true="Object", false="Object"))
+def init(node, global_state) -> Callable:
+    """
+    Pass val based on condition.
+    """
+    def tick(condition, val):
+        if condition:
+            return {"true": val}
         else:
-            return {"false": value["val"]}
+            return {"false": val}
 
     node["tick"] = tick
-
-def spec(node):
-  node["name"] = "If"
-  node["inputs"]["val"] = "Object"
-  node["inputs"]["condition"] = "Boolean"
-  node["outputs"]["true"] = "Object"
-  node["outputs"]["false"] = "Object"
-  node["desc"] = "Pass val based on condition."

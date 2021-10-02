@@ -3,13 +3,13 @@ from gpm.pyGP.registry import register
 NODES = {}
 
 @register(NODES,
-    name="Pass",
-    inputs=dict(inp="Object"),
-    outputs=dict(outp="Object"))
+    name="Divide",
+    inputs=dict(a="Number", b="Number"),
+    outputs=dict(result="Number"))
 def init(node, global_state) -> Callable:
     """
-    Pass an object. Does nothing.
+    a / b
     """
-    def tick(inp):
-        return {"outp": inp}
+    def tick(a, b):
+        return {"result": a / b}
     return tick

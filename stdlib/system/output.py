@@ -1,12 +1,16 @@
-def init(node, global_state):
-    def tick(value):
-        global_state.output_dict[node["args"]["outputname"]] = value["val"]
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
+
+@register(NODES,
+    name="Output",
+    inputs=dict(val="Object"),
+    outputs=dict(value="Object"))
+def init(node, global_state, outputname: str = "test") -> Callable:
+    """
+    Sets the output of the program.
+    """
+    def tick(val):
+        global_state.output_dict[outputname] = val
         return {}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Output"
-    node["inputs"]["val"] = "Object"
-    node["args"]["outputname"] = "test"
-    node["desc"] = "Sets the output of the program"
+    return tick

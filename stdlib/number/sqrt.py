@@ -1,15 +1,16 @@
+import math
 from typing import Callable
 from gpm.pyGP.registry import register
 NODES = {}
 
 @register(NODES,
-    name="Pass",
-    inputs=dict(inp="Object"),
-    outputs=dict(outp="Object"))
+    name="SQRT",
+    inputs=dict(a="Number"),
+    outputs=dict(result="Number"))
 def init(node, global_state) -> Callable:
     """
-    Pass an object. Does nothing.
+    SQRT(a)
     """
-    def tick(inp):
-        return {"outp": inp}
+    def tick(a):
+        return {"result": math.sqrt(a)}
     return tick

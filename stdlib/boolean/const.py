@@ -6,7 +6,7 @@ NODES = {}
     name="Bool Const",
     inputs=dict(),
     outputs=dict(result="Boolean"))
-def init(global_state, value: bool = True) -> Callable:
+def init(node, global_state, value: bool = True) -> Callable:
     """
     Return a const boolean.
     """

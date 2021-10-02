@@ -1,19 +1,19 @@
-def init(node, global_state):
-    def tick(value):
-        return {"1": value["val"],
-                "2": value["val"],
-                "3": value["val"],
-                "4": value["val"],
-                "5": value["val"]}
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Splitflow 5"
-    node["inputs"]["val"] = "Object"
-    node["outputs"]["1"] = "Object"
-    node["outputs"]["2"] = "Object"
-    node["outputs"]["3"] = "Object"
-    node["outputs"]["4"] = "Object"
-    node["outputs"]["5"] = "Object"
-    node["desc"] = "Split the flow into five."
+@register(NODES,
+    name="Splitflow 5",
+    inputs=dict(val="Object"),
+    outputs=dict(a="Object", b="Object", c="Object", d="Object", e="Object"))
+def init(node, global_state) -> Callable:
+    """
+    Split the flow into five.
+    """
+    def tick(val):
+        return {"a": val,
+                "b": val,
+                "c": val,
+                "d": val,
+                "e": val}
+    return tick
