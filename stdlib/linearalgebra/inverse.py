@@ -1,13 +1,16 @@
 import numpy as np
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        return {"result": np.linalg.inv(value["val"])}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Invert"
-    node["inputs"]["val"] = "Matrix"
-    node["outputs"]["result"] = "Matrix"
-    node["desc"] = "Calculate the inverse for a matrix."
+@register(NODES,
+    name="Invert",
+    inputs=dict(val="Matrix"),
+    outputs=dict(result="Matrix"))
+def init(node, global_state) -> Callable:
+    """
+    Invert a matrix.
+    """
+    def tick(val):
+        return {"result": np.linalg.inv(val)}
+    return tick

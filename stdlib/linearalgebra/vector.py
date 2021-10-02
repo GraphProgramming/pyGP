@@ -1,13 +1,16 @@
 import numpy as np
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        return {"result": np.array(node["args"]["value"])}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Vector"
-    node["outputs"]["result"] = "Vector"
-    node["args"]["value"] = [1, 0, 0]
-    node["desc"] = "A simple vector"
+@register(NODES,
+    name="Vector",
+    inputs=dict(),
+    outputs=dict(result="Vector"))
+def init(node, global_state, value = [1, 0, 0]) -> Callable:
+    """
+    A simple vector.
+    """
+    def tick():
+        return {"result": np.array(value)}
+    return tick

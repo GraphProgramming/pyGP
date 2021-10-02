@@ -1,14 +1,16 @@
 import numpy as np
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        return {"x": np.linalg.solve(value["M"], value["b"])}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Solve Mx = b"
-    node["inputs"]["M"] = "Matrix"
-    node["inputs"]["b"] = "Vector"
-    node["outputs"]["x"] = "Vector"
-    node["desc"] = "Solves Mx = b for x."
+@register(NODES,
+    name="Solve Mx = b",
+    inputs=dict(M="Matrix", b="Vector"),
+    outputs=dict(x="Vector"))
+def init(node, global_state) -> Callable:
+    """
+    Solves Mx = b for x.
+    """
+    def tick(M, b):
+        return {"x": np.linalg.solve(M, b)}
+    return tick

@@ -1,13 +1,16 @@
 import numpy as np
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        return {"result": np.array(node["args"]["value"])}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Matrix"
-    node["outputs"]["result"] = "Matrix"
-    node["args"]["value"] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    node["desc"] = "A simple matrix"
+@register(NODES,
+    name="Matrix",
+    inputs=dict(),
+    outputs=dict(value="Matrix"))
+def init(node, global_state, value = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) -> Callable:
+    """
+    A simple matrix
+    """
+    def tick():
+        return {"result": np.array(value)}
+    return tick

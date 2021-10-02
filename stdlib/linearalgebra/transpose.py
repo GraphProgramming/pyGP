@@ -1,13 +1,15 @@
-import numpy as np
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        return {"result": value["val"].T}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Transpose"
-    node["inputs"]["val"] = "Matrix"
-    node["outputs"]["result"] = "Matrix"
-    node["desc"] = "Transpose a matrix"
+@register(NODES,
+    name="Transpose",
+    inputs=dict(val="Matrix"),
+    outputs=dict(result="Matrix"))
+def init(node, global_state) -> Callable:
+    """
+    Transpose a matrix
+    """
+    def tick(val):
+        return {"result": val.T}
+    return tick

@@ -1,13 +1,16 @@
 import numpy as np
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        return {"result": np.squeeze(np.asarray(value["val"].T))}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "toVector"
-    node["inputs"]["val"] = "Matrix"
-    node["outputs"]["result"] = "Vector"
-    node["desc"] = "Convert Matrix to vector."
+@register(NODES,
+    name="toVector",
+    inputs=dict(val="Matrix"),
+    outputs=dict(result="Vector"))
+def init(node, global_state) -> Callable:
+    """
+    Convert Matrix to vector.
+    """
+    def tick(val):
+        return {"result": np.squeeze(np.asarray(val.T))}
+    return tick

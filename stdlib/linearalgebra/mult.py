@@ -1,12 +1,15 @@
-def init(node, global_state):
-    def tick(value):
-        return {"result": value["a"] * value["b"]}
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Mult"
-    node["inputs"]["a"] = "Matrix"
-    node["inputs"]["b"] = "Matrix"
-    node["outputs"]["result"] = "Matrix"
-    node["desc"] = "Multiplies component wise."
+@register(NODES,
+    name="Multiply",
+    inputs=dict(a="Matrix", b="Matrix"),
+    outputs=dict(result="Matrix"))
+def init(node, global_state) -> Callable:
+    """
+    Multiplies component wise.
+    """
+    def tick(a, b):
+        return {"result": a * b}
+    return tick

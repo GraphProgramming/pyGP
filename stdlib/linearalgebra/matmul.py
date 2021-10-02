@@ -1,14 +1,16 @@
 import numpy as np
+from typing import Callable
+from gpm.pyGP.registry import register
+NODES = {}
 
-def init(node, global_state):
-    def tick(value):
-        return {"result": np.matmul(value["a"], value["b"])}
-
-    node["tick"] = tick
-
-def spec(node):
-    node["name"] = "Matrix Product"
-    node["inputs"]["a"] = "Matrix"
-    node["inputs"]["b"] = "Matrix"
-    node["outputs"]["result"] = "Number"
-    node["desc"] = "Calculate the matrix multiplication of matrices."
+@register(NODES,
+    name="Matrix Product",
+    inputs=dict(a="Matrix", b="Matrix"),
+    outputs=dict(result="Matrix"))
+def init(node, global_state) -> Callable:
+    """
+    Calculate the matrix multiplication of matrices.
+    """
+    def tick(a, b):
+        return {"result": np.matmul(a, b)}
+    return tick
